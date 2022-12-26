@@ -1,0 +1,26 @@
+name: Smart Contract Vulnerability Scan
+
+on: [push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Scan for vulnerabilities
+      run: |
+        # Install dependencies
+        npm install
+
+        # Scan smart contract using Mythril
+        RESULT=$(mythril -x contract.sol)
+
+        # Check if any vulnerabilities were found
+        if [[ "$RESULT" == *"Vulnerabilities found"* ]]
+        then
+          # Send email using MailGun API
+          curl -s --user "api:${{ secrets.MAILGUN_API_KEY }}" https://api.mailgun.net/v3/sandboxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.mailgun.org/messages -F from='GitHub Action <action@sandboxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.mailgun.org>' -F to='repository-maintainer@example.com' -F subject='Security issue: Vulnerabilities found in smart contract' -F text='Vulnerabilities were found in the smart contract. Please review the results and take appropriate action to address any issues.'
+
+          # Send message to Discord using Discord API
+          curl -X POST -H "Authorization: Bot ${{ secrets.DISCORD_BOT_TOKEN }}" -H "Content-Type: application/json" -d '{"content":"Security issue: Vulnerabilities found in smart contract. Please review the results and take appropriate action to address any issues."}' "https://discordapp.com/api/channels/1234567890/messages"
+        fi
